@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -182,6 +183,13 @@ other arguments that changed will be applied.`,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "The user provided OAuth client secret key value, this can be set when token_endpoint_auth_method is client_secret_basic. This does nothing when `omit_secret is set to true.",
+			},
+			"client_secret_basic_wo": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Write-only version of client_basic_secret for Terraform 1.11+. The secret will not be stored in state when using this attribute.",
 			},
 			"token_endpoint_auth_method": {
 				Type:        schema.TypeString,
@@ -727,7 +735,7 @@ func setOAuthClientSettingsV6(d *schema.ResourceData, oauthClient *v6okta.OpenId
 	if consentMethod := oauthClient.GetConsentMethod(); consentMethod != "" {
 		_ = d.Set("consent_method", consentMethod)
 	}
-	_ = d.Set("issuer_mode", oauthClient.GetIssuerMode())
+_ = d.Set("issuer_mode", oauthClient.GetIssuerMode())
 	_ = d.Set("participate_slo", oauthClient.GetParticipateSlo())
 	_ = d.Set("frontchannel_logout_uri", oauthClient.GetFrontchannelLogoutUri())
 	_ = d.Set("frontchannel_logout_session_required", oauthClient.GetFrontchannelLogoutSessionRequired())
@@ -970,7 +978,11 @@ func buildAppOAuthV6(d *schema.ResourceData, isNew bool) (v6okta.ListApplication
 	}
 	oauthClient.SetPkceRequired(pkceRequired)
 
-	if sec, ok := d.GetOk("client_basic_secret"); ok {
+// Try to get write-only attribute first, fall back to regular attribute
+	woVal, diags := d.GetRawConfigAt(cty.GetAttrPath("client_secret_basic_wo"))
+	if len(diags) == 0 && woVal.Type().Equals(cty.String) && !woVal.IsNull() {
+		oauthClient.SetClientSecret(woVal.AsString())
+	} else if sec, ok := d.GetOk("client_basic_secret"); ok {
 		oauthClient.SetClientSecret(sec.(string))
 	}
 
@@ -1151,7 +1163,7 @@ func buildAppOAuthV6(d *schema.ResourceData, isNew bool) (v6okta.ListApplication
 		oauthClientSettings.SetRefreshToken(*refresh)
 	}
 
-	// Build main settings
+// Build main settings
 	settings := v6okta.NewOpenIdConnectApplicationSettingsWithDefaults()
 	if implicitAssignment, ok := d.GetOk("implicit_assignment"); ok {
 		settings.SetImplicitAssignment(implicitAssignment.(bool))
