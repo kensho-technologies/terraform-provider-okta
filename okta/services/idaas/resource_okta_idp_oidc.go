@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/okta/terraform-provider-okta/okta/utils"
-	"github.com/okta/terraform-provider-okta/okta/utils/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/okta/terraform-provider-okta/sdk"
 )
 
@@ -205,14 +205,22 @@ func resourceIdpRead(ctx context.Context, d *schema.ResourceData, meta interface
 			_ = d.Set("filter", idp.Policy.Subject.Filter)
 		}
 	}
-	if idp.Protocol != nil {
+if idp.Protocol != nil {
 		if idp.Protocol.Issuer != nil {
 			_ = d.Set("issuer_url", idp.Protocol.Issuer.Url)
 		}
 		if idp.Protocol.Credentials != nil {
 			if idp.Protocol.Credentials.Client != nil {
 				_ = d.Set("client_id", idp.Protocol.Credentials.Client.ClientId)
-				_ = d.Set("client_secret", idp.Protocol.Credentials.Client.ClientSecret)
+				// Only set client_secret if client_secret_wo was not used in the config
+				woVal, diags := d.GetRawConfigAt(cty.GetAttrPath("client_secret_wo"))
+				if len(diags) == 0 && woVal.Type().Equals(cty.String) && !woVal.IsNull() {
+					// client_secret_wo is being used, so don't persist client_secret in state
+					_ = d.Set("client_secret", "")
+				} else {
+					// client_secret is being used, persist it in state
+					_ = d.Set("client_secret", idp.Protocol.Credentials.Client.ClientSecret)
+				}
 				if idp.Protocol.Credentials.Client.PKCERequired != nil {
 					_ = d.Set("pkce_required", idp.Protocol.Credentials.Client.PKCERequired)
 				}
