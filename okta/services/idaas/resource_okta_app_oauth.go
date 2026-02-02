@@ -194,6 +194,11 @@ other arguments that changed will be applied.`,
 				WriteOnly:   true,
 				Description: "The user provided write-only OAuth client secret key value for Terraform 1.11+. Unlike `client_basic_secret`, this secret will not be persisted in the Terraform state file, providing improved security. Only use this attribute with Terraform 1.11 or higher.",
 			},
+			"client_basic_secret_wo_version": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Version number for the write-only client secret. Increment this value to trigger an update when changing `client_basic_secret_wo`.",
+			},
 			"token_endpoint_auth_method": {
 				Type:        schema.TypeString,
 				Optional:    true,
