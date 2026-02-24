@@ -210,7 +210,7 @@ func resourceIdpRead(ctx context.Context, d *schema.ResourceData, meta interface
 			_ = d.Set("filter", idp.Policy.Subject.Filter)
 		}
 	}
-if idp.Protocol != nil {
+	if idp.Protocol != nil {
 		if idp.Protocol.Issuer != nil {
 			_ = d.Set("issuer_url", idp.Protocol.Issuer.Url)
 		}

@@ -743,7 +743,7 @@ func setOAuthClientSettingsV6(d *schema.ResourceData, oauthClient *v6okta.OpenId
 	if consentMethod := oauthClient.GetConsentMethod(); consentMethod != "" {
 		_ = d.Set("consent_method", consentMethod)
 	}
-_ = d.Set("issuer_mode", oauthClient.GetIssuerMode())
+	_ = d.Set("issuer_mode", oauthClient.GetIssuerMode())
 	_ = d.Set("participate_slo", oauthClient.GetParticipateSlo())
 	_ = d.Set("frontchannel_logout_uri", oauthClient.GetFrontchannelLogoutUri())
 	_ = d.Set("frontchannel_logout_session_required", oauthClient.GetFrontchannelLogoutSessionRequired())
@@ -986,7 +986,7 @@ func buildAppOAuthV6(d *schema.ResourceData, isNew bool) (v6okta.ListApplication
 	}
 	oauthClient.SetPkceRequired(pkceRequired)
 
-// Try to get write-only attribute first, fall back to regular attribute
+	// Try to get write-only attribute first, fall back to regular attribute
 	woVal, diags := d.GetRawConfigAt(cty.GetAttrPath("client_basic_secret_wo"))
 	if len(diags) == 0 && woVal.Type().Equals(cty.String) && !woVal.IsNull() {
 		oauthClient.SetClientSecret(woVal.AsString())
@@ -1171,7 +1171,7 @@ func buildAppOAuthV6(d *schema.ResourceData, isNew bool) (v6okta.ListApplication
 		oauthClientSettings.SetRefreshToken(*refresh)
 	}
 
-// Build main settings
+	// Build main settings
 	settings := v6okta.NewOpenIdConnectApplicationSettingsWithDefaults()
 	if implicitAssignment, ok := d.GetOk("implicit_assignment"); ok {
 		settings.SetImplicitAssignment(implicitAssignment.(bool))

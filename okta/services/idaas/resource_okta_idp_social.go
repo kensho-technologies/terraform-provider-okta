@@ -194,7 +194,7 @@ func resourceIdpSocialRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 	_ = d.Set("protocol_type", idp.Protocol.Type)
-c := idp.Protocol.Credentials.Client
+	c := idp.Protocol.Credentials.Client
 	if c != nil {
 		_ = d.Set("client_id", c.ClientId)
 		// Only set client_secret if client_secret_wo was not used in the config
